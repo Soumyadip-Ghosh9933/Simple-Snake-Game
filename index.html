@@ -93,23 +93,11 @@
 
         #pauseButton {
             position: absolute;
-            top: 24%;
-            right: 70%;
+            top: 10%;
+            right: 10%;
             font-size: 30px;
             cursor: pointer;
             z-index: 1;
-        }
-
-        #mobileControls {
-            display: none;
-            margin-top: 20px;
-            text-align: center;
-        }
-
-        .mobile-button {
-            font-size: 30px;
-            margin: 5px;
-            cursor: pointer;
         }
 
         @media (max-width: 600px) {
@@ -129,12 +117,6 @@
 
             #author {
                 font-size: 12px;
-            }
-
-            .mobile-button {
-                font-size: 40px;
-                width: 50px;
-                height: 50px;
             }
         }
     </style>
@@ -156,14 +138,6 @@
         <button onclick="restartGame()">Play Again</button>
     </div>
     <div id="pauseButton" onclick="togglePause()">⏸️</div>
-    <div id="mobileControls">
-        <div>
-            <button class="mobile-button" onclick="changeDirection({keyCode: 37})">←</button>
-            <button class="mobile-button" onclick="changeDirection({keyCode: 38})">↑</button>
-            <button class="mobile-button" onclick="changeDirection({keyCode: 39})">→</button>
-            <button class="mobile-button" onclick="changeDirection({keyCode: 40})">↓</button>
-        </div>
-    </div>
 
     <script>
         const canvas = document.getElementById('gameCanvas');
@@ -177,6 +151,9 @@
         let gameInterval;
         let speed;
         let isPaused = false;
+
+        let touchStartX = 0;
+        let touchStartY = 0;
 
         function startGame(mode) {
             document.getElementById('popup').style.display = 'none';
@@ -203,10 +180,39 @@
             gameInterval = setInterval(draw, speed);
             spawnSpecialFood();
 
-            // Show mobile controls on smaller screens
-            if (window.innerWidth <= 600) {
-                document.getElementById('mobileControls').style.display = 'block';
+            // Add touch events for mobile control
+            canvas.addEventListener('touchstart', handleTouchStart, false);
+            canvas.addEventListener('touchmove', handleTouchMove, false);
+        }
+
+        function handleTouchStart(event) {
+            touchStartX = event.touches[0].clientX;
+            touchStartY = event.touches[0].clientY;
+        }
+
+        function handleTouchMove(event) {
+            const touchEndX = event.touches[0].clientX;
+            const touchEndY = event.touches[0].clientY;
+
+            const diffX = touchEndX - touchStartX;
+            const diffY = touchEndY - touchStartY;
+
+            if (Math.abs(diffX) > Math.abs(diffY)) {
+                if (diffX > 0 && direction !== 'LEFT') {
+                    direction = 'RIGHT';
+                } else if (diffX < 0 && direction !== 'RIGHT') {
+                    direction = 'LEFT';
+                }
+            } else {
+                if (diffY > 0 && direction !== 'UP') {
+                    direction = 'DOWN';
+                } else if (diffY < 0 && direction !== 'DOWN') {
+                    direction = 'UP';
+                }
             }
+
+            touchStartX = touchEndX;
+            touchStartY = touchEndY;
         }
 
         function changeDirection(event) {
@@ -337,11 +343,6 @@
         function restartGame() {
             document.getElementById('gameOverPopup').style.display = 'none';
             startGame('normal'); // Restart the game with 'normal' difficulty or set your preferred mode
-        }
-
-        // Mobile button controls
-        function changeDirectionMobile(event) {
-            changeDirection(event);
         }
 
         document.getElementById('popup').style.display = 'block';
